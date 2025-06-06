@@ -1,6 +1,0 @@
-# RotateInPlace.action
-float64 target_angle
----
-bool finished
----
-float64 current_angle
