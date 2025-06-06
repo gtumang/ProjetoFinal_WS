@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # Serviço base para reutilização de configurações
+  ros-base:
+    image: ros-foxy-unified:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    network_mode: host
+    ipc: host
+    pid: host
+    privileged: true
+    environment:
+      - ROS_DOMAIN_ID=0
+      - ROS_LOCALHOST_ONLY=0
+    volumes:
+      - ./src:/ros2_ws/src:rw
+      - ./config:/ros2_ws/config:ro
+    stdin_open: true
+    tty: true
+
+  rm_localization:
+    extends: ros-base
+    container_name: rm_localization
+    command: >
+      bash -c "
+        ros2 launch rm_localization localization.launch.py
+          --params-file /ros2_ws/config/amcl_params.yaml
+      "
+    depends_on:
+      - ros-master
+
+  rm_navigation:
+    extends: ros-base
+    container_name: rm_navigation
+    command: >
+      bash -c "
+        ros2 launch rm_navigation navigation.launch.py
+          params_file:=/ros2_ws/config/nav2_params.yaml
+      "
+    depends_on:
+      - rm_localization
+
+  waypoint_follower:
+    extends: ros-base
+    container_name: waypoint_follower
+    command: >
+      bash -c "
+        ros2 run waypoint_follower navigator -6.0 -6.0 0.0
+      "
+    depends_on:
+      - rm_navigation
+
+  # Container auxiliar para desenvolvimento/debug
+  ros-master:
+    extends: ros-base
+    container_name: ros-master
+    command: bash

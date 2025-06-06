@@ -1,0 +1,149 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="dif_rob">
+    
+    <xacro:property name="radius" value="0.3" />
+    <xacro:property name="height" value="0.08" />
+    <xacro:property name="mass" value="10.0" />
+    <xacro:property name="wheel_radius" value="0.08" />
+    <xacro:property name="casterBall_radius" value="${height/2-wheel_radius/4}" />
+    <xacro:property name="lidarSup_height" value="${height/2-wheel_radius/4+0.05}"/>
+    <xacro:include filename="src/robot_description/urdf/wheels.xacro"/>
+    <xacro:include filename="src/robot_description/urdf/caster_ball.xacro"/>
+    <xacro:include filename="src/robot_description/urdf/sensors.xacro"/>
+    
+    <link name="base_link"></link>
+
+    <link name="chassis_link">
+            <visual>
+            <geometry>
+                <cylinder radius="${radius}" length="${height}"/>
+            </geometry>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="${radius}" length="${height}"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="${mass}"/>
+            <inertia 
+                ixx="${1/12*mass*(3*(radius*radius)+height*height)}" 
+                ixy="0.0" 
+                ixz="0.0" 
+                iyy="${1/12*mass*(3*radius*radius+height*height)}" 
+                iyz="0.0" 
+                izz="${1/12*mass*(radius*radius)}"/>
+        </inertial>
+    </link>
+    <joint name="chassis_to_base_link" type="fixed">
+        <parent link="base_link"/>
+        <child link="chassis_link"/>
+        <origin xyz="0.0 0.0 0.0" />
+        <axis xyz="0.0 0.0 0.0"/>
+    </joint>
+
+    <!-- Rodas -->
+    <xacro:wheel prefix="right" reflect="-1" wheel_radius="${wheel_radius}" base_width="${radius}">
+        <axis xyz="0 0 1"/>
+    </xacro:wheel>
+
+    <xacro:wheel prefix="left" reflect="1" wheel_radius="${wheel_radius}" base_width="${radius}">
+        <axis xyz="0 0 1"/>
+    </xacro:wheel>    
+    <gazebo reference="right_wheel">
+        <mu1 value="100.0"/>
+        <mu2 value="50.0"/>
+    </gazebo>
+    <gazebo reference="left_wheel">
+        <mu1 value="100.0"/>
+        <mu2 value="50.0"/>
+    </gazebo>
+
+    <!-- caster ball -->
+    <xacro:caster_ball radius="${casterBall_radius}" prefix="front">
+        <origin xyz="${radius-casterBall_radius} 0.0 -${height/2+wheel_radius/4}"/>
+    </xacro:caster_ball>
+    <xacro:caster_ball radius="${casterBall_radius}" prefix="back">
+        <origin xyz="-${radius-casterBall_radius} 0.0 -${height/2+wheel_radius/4}"/>
+    </xacro:caster_ball>
+    <gazebo reference="caster_ball">
+        <mu1 value="0.001"/>
+        <mu2 value="0.001"/>
+    </gazebo>
+
+
+    <!-- IMU-->
+    <link name="imu_link"/>
+    <joint name="base_to_imu" type="fixed">
+        <parent link="base_link"/>
+        <child link="imu_link"/>
+        <origin xyz="0.0 0.0 0.0" />
+        <axis xyz="0.0 0.0 0.0"/>
+    </joint>
+    <xacro:imu></xacro:imu>
+
+    <!-- Suporte para o Lidar-->
+    <link name="lidarSup_link">
+        <visual>            
+            <geometry>
+                <box size="${radius/2} ${radius/2} ${lidarSup_height}"/>
+            </geometry>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="${radius/2} ${radius/2} ${lidarSup_height}"/>
+            </geometry>
+        </collision>
+    </link>
+    <joint name="base_to_lidarSup" type="fixed">
+        <parent link="base_link"/>
+        <child link="lidarSup_link"/>
+        <origin xyz="0.0 0.0 ${height/2+lidarSup_height/2}" />
+        <axis xyz="0.0 0.0 0.0"/>
+    </joint>
+    <xacro:lidar></xacro:lidar>
+
+    <!-- Lidar-->
+    <link name="lidar_link">
+        <visual>            
+            <geometry>
+                <cylinder radius="${radius/3}" length="${height/3}"/>
+            </geometry>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="${radius/3}" length="${height/3}"/>
+            </geometry>
+        </collision>
+    </link>
+    <joint name="base_to_lidar" type="fixed">
+        <parent link="base_link"/>
+        <child link="lidar_link"/>
+        <origin xyz="0.0 0.0 ${height/2+lidarSup_height+height/6}" />
+        <axis xyz="0.0 0.0 0.0"/>
+    </joint>
+
+    <!-- Camera-->
+    <link name="camera_link">
+        <visual>            
+            <geometry>
+                <box size="${radius/20} ${radius/10} ${radius/10}"/>
+            </geometry>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="${radius/20} ${radius/10} ${radius/10}"/>
+            </geometry>
+        </collision>
+    </link>
+    <joint name="base_to_camera" type="fixed">
+        <parent link="base_link"/>
+        <child link="camera_link"/>
+        <origin xyz="${radius-0.05} 0.0 ${height/2+radius/20}" />
+        <axis xyz="0.0 0.0 0.0"/>
+    </joint>
+    <xacro:camera_macro></xacro:camera_macro>
+
+    <xacro:differential_controller base_diameter="${radius*2}" wheel_diameter="0.4"/>
+
+</robot>
