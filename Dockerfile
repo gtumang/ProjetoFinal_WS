@@ -17,9 +17,9 @@ RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/r
 
 RUN apt update && apt upgrade -y
 
-RUN apt install -y ros-foxy-ros-base python3-argcomplete ros-dev-tools
+RUN apt update && apt install -y ros-foxy-ros-base python3-argcomplete ros-dev-tools
 
-RUN sudo apt install -y \
+RUN apt update && apt install -y \
     ros-foxy-xacro \
     ros-foxy-navigation2 \
     ros-foxy-nav2-bringup \
@@ -40,7 +40,7 @@ RUN mkdir -p src
 COPY ./src /ros2_ws/src
 
 # Build do workspace (se tiver pacotes customizados)
-# RUN /bin/bash -c "source /opt/ros/foxy/setup.bash && colcon build"
+RUN /bin/bash -c "source /opt/ros/foxy/setup.bash && colcon build"
 
 # Script de entrada flexível
 COPY ./docker/entrypoint.sh /entrypoint.sh
