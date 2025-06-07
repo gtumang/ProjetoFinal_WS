@@ -6,14 +6,11 @@ from std_srvs.srv import Empty
 from action_msgs.msg import GoalStatus
 from geometry_msgs.msg import PoseWithCovarianceStamped
 import math
-import sys
+import os
+import yaml
 
 class Navigator(Node):
 
-    goal_list = [
-        [-8.0,-6.0,0.0],
-        [-8.0,-6.0,math.radians(90)],
-    ]
 
     def __init__(self):
         super().__init__('navigator')
@@ -31,6 +28,11 @@ class Navigator(Node):
 
         self.goal_num = 0
         self.executing = False
+        config = self.load_config()
+
+        self.set_initial_pose(config['initial_pose']["x"], config['initial_pose']["y"], config['initial_pose']["z"])
+
+        self.goal_list = config["waypoints"]["goal_list"]
 
     def set_initial_pose(self, x, y, yaw):
         msg = PoseWithCovarianceStamped()
@@ -123,7 +125,7 @@ class Navigator(Node):
     def exec_goal(self):
         if(self.executing):
             self.get_logger().info(f"Goal counter: {self.goal_num}")
-            x,y, yaw = Navigator.goal_list[self.goal_num]
+            x,y, yaw = self.goal_list[self.goal_num]
             self.get_logger().info(f"Enviando objetivo: x = {x}; y = {y}; yaw={yaw}")
             self.send_goal(x, y, yaw)
 
@@ -144,6 +146,10 @@ class Navigator(Node):
 
         return q
 
+    def load_config(self):
+        path = "/ros2_ws/config/waypoint_follower/waypoints.yaml" if os.path.exists("/ros2_ws/config") else "./config/waypoint_follower/waypoints.yaml"
+        with open(path) as file:
+            return yaml.safe_load(file)
 
     
 
@@ -151,5 +157,4 @@ def main(args=None):
     rclpy.init(args=args)
     nav = Navigator()
     #action_client.send_goal(float(sys.argv[1]), float(sys.argv[2]))
-    nav.set_initial_pose(float(sys.argv[1]), float(sys.argv[2]), float(sys.argv[3]))
     rclpy.spin(nav)
