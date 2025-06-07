@@ -4,7 +4,7 @@ from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, SetEnvironmentVariable
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from nav2_common.launch import RewrittenYaml
 
@@ -12,6 +12,13 @@ from nav2_common.launch import RewrittenYaml
 def generate_launch_description():
     # Get the launch directory
     rm_navigation = get_package_share_directory('rm_navigation')
+    
+    # Check if we're running in Docker (config mounted at /config)
+    # or in development (config in package share directory)
+    if os.path.exists('/config'):
+        config_dir = '/config/navigation'
+    else:
+        config_dir = os.path.join(rm_navigation, 'config')
 
     namespace = LaunchConfiguration('namespace')
     use_sim_time = LaunchConfiguration('use_sim_time')
@@ -60,7 +67,7 @@ def generate_launch_description():
 
         DeclareLaunchArgument(
             'params_file',
-            default_value=os.path.join(rm_navigation, 'config', 'nav2_params.yaml'),
+            default_value=os.path.join(config_dir, 'nav2_params.yaml'),
             description='Full path to the ROS2 parameters file to use'),
 
         DeclareLaunchArgument(
