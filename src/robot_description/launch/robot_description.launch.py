@@ -27,19 +27,6 @@ def generate_launch_description():
                     get_package_share_directory('gazebo_ros'), 'launch', 'gazebo.launch.py')]),
                 launch_arguments={'world': os.path.join(description_package_path, 'world', world_file_name)}.items())
     
-    slam = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([os.path.join(
-            get_package_share_directory('rm_slam'), 'launch', 'slam.launch.py')]))
-    ekf = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([os.path.join(
-            get_package_share_directory('rm_localization'), 'launch', 'ekf.launch.py')]))
-    amcl = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([os.path.join(
-            get_package_share_directory('rm_localization'), 'launch', 'amcl.launch.py')]))
-    navigation = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([os.path.join(
-            get_package_share_directory('rm_navigation'), 'launch', 'navigation.launch.py')]))
-    
 
     robot_state_publisher = Node(
         package='robot_state_publisher',
@@ -72,5 +59,4 @@ def generate_launch_description():
         robot_state_publisher,
         rviz_node,
         spawn_entity,
-        ekf,
     ])
